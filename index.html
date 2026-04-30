@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MessMate - Student Mess Manager</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand-block">
+          <div class="brand-mark">MM</div>
+          <div>
+            <p class="eyebrow">MessMate</p>
+            <h1>Mess Control</h1>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-link is-active" data-view="dashboard">Dashboard</button>
+          <button class="nav-link" data-view="residents">Residents & Rent</button>
+          <button class="nav-link" data-view="meals">Meal Count</button>
+          <button class="nav-link" data-view="market">Market & Cost</button>
+          <button class="nav-link" data-view="menu">Today's Menu</button>
+          <button class="nav-link" data-view="payments">Payments</button>
+          <button class="nav-link" data-view="settlement">Monthly Settlement</button>
+        </nav>
+
+        <div class="sidebar-note">
+          <span class="status-dot"></span>
+          <span>Local data saved on this device</span>
+        </div>
+      </aside>
+
+      <div class="content-shell">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Ready-to-go app for student messes</p>
+            <h2 id="pageTitle">Dashboard</h2>
+          </div>
+          <div class="topbar-actions">
+            <label class="month-control">
+              <span>Month</span>
+              <input id="monthPicker" type="month">
+            </label>
+            <button id="resetDemoBtn" class="button ghost" type="button">Reset sample</button>
+          </div>
+        </header>
+
+        <main>
+          <section id="dashboard" class="view is-active" aria-labelledby="dashboardTitle">
+            <div class="dashboard-grid">
+              <section class="summary-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="eyebrow">Live overview</p>
+                    <h3 id="dashboardTitle">Mess Health</h3>
+                  </div>
+                  <img class="mess-visual" src="assets/mess-board.svg" alt="Mess kitchen counter with prepared meals">
+                </div>
+                <div id="metricGrid" class="metric-grid"></div>
+              </section>
+
+              <section class="today-panel">
+                <div class="panel-heading compact">
+                  <div>
+                    <p class="eyebrow">Today</p>
+                    <h3>Food Prepared</h3>
+                  </div>
+                  <span id="todayDateBadge" class="badge"></span>
+                </div>
+                <div id="todayMenuCard" class="menu-card"></div>
+              </section>
+            </div>
+
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Suggested use cases</p>
+                  <h3>Useful Mess Workflows</h3>
+                </div>
+              </div>
+              <div class="use-case-grid">
+                <article>
+                  <strong>Rent showcase</strong>
+                  <span>Show each room's monthly rent, paid amount, and pending balance.</span>
+                </article>
+                <article>
+                  <strong>Meal count billing</strong>
+                  <span>Charge each student based on actual breakfast, lunch, dinner, and guest meals.</span>
+                </article>
+                <article>
+                  <strong>Market transparency</strong>
+                  <span>Display every grocery purchase with item, quantity, buyer, and cost.</span>
+                </article>
+                <article>
+                  <strong>Menu planning</strong>
+                  <span>Share today's food and keep notes for the cook or mess manager.</span>
+                </article>
+                <article>
+                  <strong>Monthly settlement</strong>
+                  <span>Calculate food cost per meal and export every member's final bill.</span>
+                </article>
+                <article>
+                  <strong>Notice board</strong>
+                  <span>Track quick decisions such as skip-meal cutoff, guest charge, or special dinner.</span>
+                </article>
+              </div>
+            </section>
+
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Needs attention</p>
+                  <h3>Priority List</h3>
+                </div>
+              </div>
+              <div id="attentionList" class="attention-list"></div>
+            </section>
+          </section>
+
+          <section id="residents" class="view" aria-labelledby="residentsTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Members</p>
+                  <h3 id="residentsTitle">Residents & Rent</h3>
+                </div>
+              </div>
+              <form id="residentForm" class="data-form">
+                <label>
+                  <span>Name</span>
+                  <input name="name" required placeholder="Student name">
+                </label>
+                <label>
+                  <span>Room</span>
+                  <input name="room" required placeholder="A-101">
+                </label>
+                <label>
+                  <span>Monthly rent</span>
+                  <input name="rent" required type="number" min="0" step="100" placeholder="4500">
+                </label>
+                <label>
+                  <span>Phone</span>
+                  <input name="phone" placeholder="9876543210">
+                </label>
+                <label>
+                  <span>Status</span>
+                  <select name="status">
+                    <option value="active">Active</option>
+                    <option value="away">Away</option>
+                  </select>
+                </label>
+                <button class="button primary" type="submit">Add resident</button>
+              </form>
+              <div id="residentTable" class="table-wrap"></div>
+            </section>
+          </section>
+
+          <section id="meals" class="view" aria-labelledby="mealsTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Individual meal count</p>
+                  <h3 id="mealsTitle">Meal Entry</h3>
+                </div>
+              </div>
+              <form id="mealForm" class="data-form meal-form">
+                <label>
+                  <span>Date</span>
+                  <input name="date" required type="date">
+                </label>
+                <label>
+                  <span>Resident</span>
+                  <select name="residentId" required></select>
+                </label>
+                <label class="check-field">
+                  <input name="breakfast" type="checkbox">
+                  <span>Breakfast</span>
+                </label>
+                <label class="check-field">
+                  <input name="lunch" type="checkbox" checked>
+                  <span>Lunch</span>
+                </label>
+                <label class="check-field">
+                  <input name="dinner" type="checkbox" checked>
+                  <span>Dinner</span>
+                </label>
+                <label>
+                  <span>Guest meals</span>
+                  <input name="guest" type="number" min="0" step="1" value="0">
+                </label>
+                <button class="button primary" type="submit">Save meal</button>
+              </form>
+              <div id="mealSummary" class="mini-stat-row"></div>
+              <div id="mealTable" class="table-wrap"></div>
+            </section>
+          </section>
+
+          <section id="market" class="view" aria-labelledby="marketTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Purchases</p>
+                  <h3 id="marketTitle">Market & Cost</h3>
+                </div>
+              </div>
+              <form id="purchaseForm" class="data-form">
+                <label>
+                  <span>Date</span>
+                  <input name="date" required type="date">
+                </label>
+                <label>
+                  <span>Item</span>
+                  <input name="item" required placeholder="Rice, potato, eggs">
+                </label>
+                <label>
+                  <span>Category</span>
+                  <select name="category">
+                    <option>Grocery</option>
+                    <option>Vegetable</option>
+                    <option>Protein</option>
+                    <option>Dairy</option>
+                    <option>Spice</option>
+                    <option>Utility</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Quantity</span>
+                  <input name="quantity" required type="number" min="0" step="0.1" placeholder="5">
+                </label>
+                <label>
+                  <span>Unit</span>
+                  <select name="unit">
+                    <option>kg</option>
+                    <option>g</option>
+                    <option>litre</option>
+                    <option>piece</option>
+                    <option>packet</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Cost</span>
+                  <input name="cost" required type="number" min="0" step="1" placeholder="900">
+                </label>
+                <label>
+                  <span>Bought by</span>
+                  <input name="buyer" placeholder="Manager">
+                </label>
+                <button class="button primary" type="submit">Add purchase</button>
+              </form>
+              <div id="categoryBreakdown" class="mini-stat-row"></div>
+              <div id="purchaseTable" class="table-wrap"></div>
+            </section>
+          </section>
+
+          <section id="menu" class="view" aria-labelledby="menuTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Kitchen board</p>
+                  <h3 id="menuTitle">Today's Menu</h3>
+                </div>
+              </div>
+              <form id="menuForm" class="data-form menu-form">
+                <label>
+                  <span>Date</span>
+                  <input name="date" required type="date">
+                </label>
+                <label>
+                  <span>Breakfast</span>
+                  <input name="breakfast" required placeholder="Aloo paratha + tea">
+                </label>
+                <label>
+                  <span>Lunch</span>
+                  <input name="lunch" required placeholder="Rice + dal + sabzi">
+                </label>
+                <label>
+                  <span>Dinner</span>
+                  <input name="dinner" required placeholder="Roti + paneer curry">
+                </label>
+                <label>
+                  <span>Cook note</span>
+                  <input name="note" placeholder="Less oil, extra salad">
+                </label>
+                <button class="button primary" type="submit">Publish menu</button>
+              </form>
+              <div id="menuHistory" class="menu-history"></div>
+            </section>
+          </section>
+
+          <section id="payments" class="view" aria-labelledby="paymentsTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Collection</p>
+                  <h3 id="paymentsTitle">Payments</h3>
+                </div>
+              </div>
+              <form id="paymentForm" class="data-form">
+                <label>
+                  <span>Date</span>
+                  <input name="date" required type="date">
+                </label>
+                <label>
+                  <span>Resident</span>
+                  <select name="residentId" required></select>
+                </label>
+                <label>
+                  <span>Type</span>
+                  <select name="type">
+                    <option value="rent">Rent</option>
+                    <option value="meal">Meal</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Amount</span>
+                  <input name="amount" required type="number" min="0" step="1" placeholder="2500">
+                </label>
+                <label>
+                  <span>Mode</span>
+                  <select name="mode">
+                    <option>UPI</option>
+                    <option>Cash</option>
+                    <option>Bank</option>
+                  </select>
+                </label>
+                <button class="button primary" type="submit">Record payment</button>
+              </form>
+              <div id="paymentTable" class="table-wrap"></div>
+            </section>
+          </section>
+
+          <section id="settlement" class="view" aria-labelledby="settlementTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Auto calculation</p>
+                  <h3 id="settlementTitle">Monthly Settlement</h3>
+                </div>
+                <button id="exportCsvBtn" class="button secondary" type="button">Export CSV</button>
+              </div>
+              <div id="settlementStats" class="mini-stat-row"></div>
+              <div id="settlementTable" class="table-wrap"></div>
+            </section>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

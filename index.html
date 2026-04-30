@@ -3,7 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f8b6f">
+    <meta name="description" content="Mobile-ready student mess app for rent, meals, market costs, menu, payments, and settlement.">
     <title>MessMate - Student Mess Manager</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -25,11 +30,12 @@
           <button class="nav-link" data-view="menu">Today's Menu</button>
           <button class="nav-link" data-view="payments">Payments</button>
           <button class="nav-link" data-view="settlement">Monthly Settlement</button>
+          <button class="nav-link" data-view="account">Account & Sync</button>
         </nav>
 
         <div class="sidebar-note">
           <span class="status-dot"></span>
-          <span>Local data saved on this device</span>
+          <span id="sidebarSyncText">Local data saved on this device</span>
         </div>
       </aside>
 
@@ -40,6 +46,8 @@
             <h2 id="pageTitle">Dashboard</h2>
           </div>
           <div class="topbar-actions">
+            <span id="syncStatus" class="sync-pill">Local mode</span>
+            <button id="installAppBtn" class="button secondary hidden" type="button">Install app</button>
             <label class="month-control">
               <span>Month</span>
               <input id="monthPicker" type="month">
@@ -117,6 +125,16 @@
                 </div>
               </div>
               <div id="attentionList" class="attention-list"></div>
+            </section>
+
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">This phone</p>
+                  <h3>My Mess Snapshot</h3>
+                </div>
+              </div>
+              <div id="profileSnapshot" class="mini-stat-row"></div>
             </section>
           </section>
 
@@ -346,11 +364,113 @@
               <div id="settlementTable" class="table-wrap"></div>
             </section>
           </section>
+
+          <section id="account" class="view" aria-labelledby="accountTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Mobile app setup</p>
+                  <h3 id="accountTitle">Account & Cloud Sync</h3>
+                </div>
+              </div>
+
+              <div class="account-grid">
+                <article class="account-card">
+                  <div class="account-card-heading">
+                    <strong>Login</strong>
+                    <span id="cloudConfigBadge" class="badge">Checking</span>
+                  </div>
+                  <p id="cloudStatusText">Preparing cloud sync...</p>
+                  <form id="authForm" class="stack-form">
+                    <label>
+                      <span>Email</span>
+                      <input name="email" type="email" autocomplete="email" placeholder="manager@mess.com">
+                    </label>
+                    <label>
+                      <span>Password</span>
+                      <input name="password" type="password" autocomplete="current-password" placeholder="Minimum 6 characters">
+                    </label>
+                    <div class="button-row">
+                      <button class="button primary" name="mode" value="signin" type="submit">Sign in</button>
+                      <button class="button secondary" name="mode" value="signup" type="submit">Create account</button>
+                    </div>
+                  </form>
+                  <button id="signOutBtn" class="button ghost full-width" type="button">Sign out</button>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-card-heading">
+                    <strong>Shared mess code</strong>
+                    <span id="messCodeBadge" class="badge">Not connected</span>
+                  </div>
+                  <p>Use one mess code for the whole mess. Open the same code on another phone after login to sync residents, meals, purchases, payments, and settlement.</p>
+                  <form id="messCloudForm" class="stack-form">
+                    <label>
+                      <span>Mess code</span>
+                      <input name="messId" required placeholder="green-hostel-mess">
+                    </label>
+                    <div class="button-row">
+                      <button class="button primary" type="submit">Open cloud mess</button>
+                      <button id="uploadCloudBtn" class="button secondary" type="button">Upload this device</button>
+                    </div>
+                  </form>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-card-heading">
+                    <strong>My phone profile</strong>
+                    <span class="badge">Local</span>
+                  </div>
+                  <p>Select who is using this phone. Student mode hides edit forms and keeps the phone focused on menu, meals, and dues.</p>
+                  <form id="profileForm" class="stack-form">
+                    <label>
+                      <span>Role</span>
+                      <select name="role">
+                        <option value="manager">Manager</option>
+                        <option value="student">Student</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Resident profile</span>
+                      <select name="residentId"></select>
+                    </label>
+                    <button class="button primary" type="submit">Save phone profile</button>
+                  </form>
+                </article>
+
+                <article class="account-card">
+                  <div class="account-card-heading">
+                    <strong>Install on mobile</strong>
+                    <span id="installBadge" class="badge">PWA ready</span>
+                  </div>
+                  <p>Open this site in Chrome or Safari, then use install/add-to-home-screen. After that it opens like a normal mobile app.</p>
+                  <button id="installAppBtnInline" class="button primary full-width" type="button">Install app</button>
+                </article>
+
+                <article class="account-card setup-card">
+                  <div class="account-card-heading">
+                    <strong>Firebase setup needed</strong>
+                    <span class="badge">One time</span>
+                  </div>
+                  <p>To make login and cloud sync live for everyone, add your Firebase web config in <code>firebase-config.js</code>, enable Email/Password Auth, and enable Firestore.</p>
+                  <div class="setup-list">
+                    <span>1. Create a Firebase project.</span>
+                    <span>2. Enable Authentication: Email/Password.</span>
+                    <span>3. Enable Firestore Database.</span>
+                    <span>4. Paste your web app config into <code>firebase-config.js</code>.</span>
+                    <span>5. Add <code>firestore.rules</code>, then push/deploy again.</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </section>
         </main>
       </div>
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="firebase-config.js"></script>
+    <script type="module" src="cloud.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

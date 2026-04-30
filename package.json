@@ -4,8 +4,9 @@
   "description": "Ready-to-run student mess management app for rent, meal count, purchases, menu, payments, and monthly settlement.",
   "private": true,
   "scripts": {
+    "generate-icons": "node scripts/generate-icons.js",
     "start": "node server.js",
-    "check": "node --check app.js && node --check server.js"
+    "check": "node --check app.js && node --check cloud.js && node --check server.js && node --check sw.js"
   },
   "keywords": [
     "mess",

@@ -1,0 +1,25 @@
+{
+  "name": "MessMate - Student Mess Manager",
+  "short_name": "MessMate",
+  "description": "Mobile-ready student mess app for rent, meals, market costs, menu, payments, and settlement.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0f8b6f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

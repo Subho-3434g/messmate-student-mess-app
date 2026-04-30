@@ -1,6 +1,15 @@
 const STORAGE_KEY = "messmate_state_v1";
+const SETTINGS_KEY = "messmate_settings_v1";
+const APP_STATE_KEYS = ["ui", "residents", "meals", "purchases", "menus", "payments"];
 
 const state = loadState();
+const localSettings = loadSettings();
+let cloudUser = null;
+let cloudConnected = false;
+let cloudLoading = false;
+let applyingRemoteState = false;
+let deferredInstallPrompt = null;
+
 const currency = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
@@ -20,6 +29,7 @@ const els = {
   todayDateBadge: document.querySelector("#todayDateBadge"),
   todayMenuCard: document.querySelector("#todayMenuCard"),
   attentionList: document.querySelector("#attentionList"),
+  profileSnapshot: document.querySelector("#profileSnapshot"),
   residentForm: document.querySelector("#residentForm"),
   residentTable: document.querySelector("#residentTable"),
   mealForm: document.querySelector("#mealForm"),
@@ -36,6 +46,19 @@ const els = {
   settlementTable: document.querySelector("#settlementTable"),
   exportCsvBtn: document.querySelector("#exportCsvBtn"),
   resetDemoBtn: document.querySelector("#resetDemoBtn"),
+  syncStatus: document.querySelector("#syncStatus"),
+  sidebarSyncText: document.querySelector("#sidebarSyncText"),
+  installAppBtn: document.querySelector("#installAppBtn"),
+  installAppBtnInline: document.querySelector("#installAppBtnInline"),
+  cloudConfigBadge: document.querySelector("#cloudConfigBadge"),
+  cloudStatusText: document.querySelector("#cloudStatusText"),
+  authForm: document.querySelector("#authForm"),
+  signOutBtn: document.querySelector("#signOutBtn"),
+  messCodeBadge: document.querySelector("#messCodeBadge"),
+  messCloudForm: document.querySelector("#messCloudForm"),
+  uploadCloudBtn: document.querySelector("#uploadCloudBtn"),
+  profileForm: document.querySelector("#profileForm"),
+  installBadge: document.querySelector("#installBadge"),
   toast: document.querySelector("#toast"),
 };
 
@@ -47,7 +70,10 @@ function init() {
   setDefaultDates();
   bindNavigation();
   bindForms();
+  bindAccount();
+  registerServiceWorker();
   renderAll();
+  renderAccount();
 }
 
 function bindNavigation() {
@@ -174,6 +200,105 @@ function bindForms() {
   els.exportCsvBtn.addEventListener("click", exportSettlementCsv);
 }
 
+function bindAccount() {
+  window.addEventListener("messcloud-ready", renderAccount);
+  window.addEventListener("messcloud-user", (event) => {
+    cloudUser = event.detail;
+    cloudConnected = false;
+    renderAccount();
+  });
+  window.addEventListener("messcloud-error", (event) => {
+    showToast(event.detail || "Cloud sync failed to load");
+    renderAccount();
+  });
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    renderAccount();
+  });
+
+  [els.installAppBtn, els.installAppBtnInline].forEach((button) => {
+    button?.addEventListener("click", installApp);
+  });
+
+  els.authForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const cloud = getCloud();
+    if (!cloud?.isConfigured()) {
+      showToast("Add Firebase config first");
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const email = text(form.get("email"));
+    const password = String(form.get("password") || "");
+    const mode = event.submitter?.value || "signin";
+
+    try {
+      cloudLoading = true;
+      renderAccount();
+      if (mode === "signup") {
+        await cloud.signUp(email, password);
+        showToast("Cloud account created");
+      } else {
+        await cloud.signIn(email, password);
+        showToast("Signed in");
+      }
+    } catch (error) {
+      showToast(error.message || "Login failed");
+    } finally {
+      cloudLoading = false;
+      renderAccount();
+    }
+  });
+
+  els.signOutBtn?.addEventListener("click", async () => {
+    const cloud = getCloud();
+    if (!cloud?.isConfigured()) return;
+    try {
+      await cloud.signOut();
+      cloudUser = null;
+      cloudConnected = false;
+      showToast("Signed out");
+      renderAccount();
+    } catch (error) {
+      showToast(error.message || "Could not sign out");
+    }
+  });
+
+  els.messCloudForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await openCloudMess(text(form.get("messId")));
+  });
+
+  els.uploadCloudBtn?.addEventListener("click", async () => {
+    const cloud = getCloud();
+    if (!cloudUser || !cloudConnected) {
+      showToast("Sign in and open a mess code first");
+      return;
+    }
+
+    try {
+      await cloud.saveState(state, { now: true });
+      showToast("This device data uploaded");
+    } catch (error) {
+      showToast(error.message || "Upload failed");
+    }
+  });
+
+  els.profileForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    localSettings.role = form.get("role");
+    localSettings.residentId = form.get("residentId");
+    saveSettings();
+    renderAccount();
+    showToast("Phone profile saved");
+  });
+}
+
 function renderAll() {
   updateResidentOptions();
   renderDashboard();
@@ -183,6 +308,121 @@ function renderAll() {
   renderMenus();
   renderPayments();
   renderSettlement();
+  renderAccount();
+}
+
+function renderAccount() {
+  const cloud = getCloud();
+  const configured = Boolean(cloud?.isConfigured());
+  const ready = Boolean(cloud?.isReady?.());
+  const error = cloud?.getError?.();
+  const currentUser = cloud?.getUser?.() || cloudUser;
+  const currentMessId = cloud?.getMessId?.() || localSettings.messId || "";
+  document.body.classList.toggle("student-mode", localSettings.role === "student");
+
+  if (els.cloudConfigBadge) {
+    els.cloudConfigBadge.textContent = configured ? "Firebase ready" : "Local only";
+  }
+
+  if (els.cloudStatusText) {
+    if (!configured) {
+      els.cloudStatusText.textContent = "Cloud login is built in, but Firebase keys are not added yet. The app is working in local/offline mode.";
+    } else if (error) {
+      els.cloudStatusText.textContent = `Cloud load error: ${error}`;
+    } else if (!ready) {
+      els.cloudStatusText.textContent = "Loading Firebase services...";
+    } else if (currentUser) {
+      els.cloudStatusText.textContent = `Signed in as ${currentUser.email || "mess user"}.`;
+    } else {
+      els.cloudStatusText.textContent = "Sign in or create an account to sync this mess across phones.";
+    }
+  }
+
+  const syncText = cloudConnected && currentMessId ? `Cloud sync: ${currentMessId}` : "Local mode";
+  els.syncStatus.textContent = syncText;
+  els.syncStatus.classList.toggle("offline", !cloudConnected);
+  els.sidebarSyncText.textContent = cloudConnected ? `Synced with ${currentMessId}` : "Local data saved on this device";
+  els.messCodeBadge.textContent = cloudConnected && currentMessId ? currentMessId : "Not connected";
+
+  if (els.messCloudForm?.elements.messId && !els.messCloudForm.elements.messId.matches(":focus")) {
+    els.messCloudForm.elements.messId.value = currentMessId || defaultMessId();
+  }
+
+  setFormDisabled(els.authForm, !configured || !ready || cloudLoading || Boolean(currentUser));
+  setFormDisabled(els.messCloudForm, !configured || !ready || cloudLoading || !currentUser);
+  els.signOutBtn.disabled = !configured || !ready || !currentUser;
+  els.uploadCloudBtn.disabled = !configured || !ready || !currentUser || !cloudConnected;
+
+  const canInstall = Boolean(deferredInstallPrompt);
+  els.installAppBtn.classList.toggle("hidden", !canInstall);
+  els.installAppBtnInline.disabled = !canInstall;
+  els.installBadge.textContent = canInstall ? "Ready" : "Use browser menu";
+
+  if (els.profileForm) {
+    els.profileForm.elements.role.value = localSettings.role || "manager";
+    if (els.profileForm.elements.residentId.value !== localSettings.residentId) {
+      els.profileForm.elements.residentId.value = localSettings.residentId || "";
+    }
+  }
+}
+
+async function openCloudMess(messId) {
+  const cloud = getCloud();
+  if (!cloud?.isConfigured()) {
+    showToast("Add Firebase config first");
+    return;
+  }
+
+  try {
+    cloudLoading = true;
+    renderAccount();
+    const openedMessId = await cloud.openMess(messId, state, applyRemoteState);
+    localSettings.messId = openedMessId;
+    cloudConnected = true;
+    saveSettings();
+    renderAccount();
+    showToast("Cloud mess connected");
+  } catch (error) {
+    cloudConnected = false;
+    showToast(error.message || "Could not open cloud mess");
+  } finally {
+    cloudLoading = false;
+    renderAccount();
+  }
+}
+
+function applyRemoteState(remoteState) {
+  applyingRemoteState = true;
+  mergeAppState(remoteState);
+  persist();
+  applyingRemoteState = false;
+
+  if (state.ui?.month) {
+    els.monthPicker.value = state.ui.month;
+  }
+
+  renderAll();
+}
+
+async function installApp() {
+  if (!deferredInstallPrompt) {
+    showToast("Use your browser menu to add MessMate to the home screen");
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  renderAccount();
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator) || !location.protocol.startsWith("http")) return;
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+
+function getCloud() {
+  return window.MessCloud;
 }
 
 function renderDashboard() {
@@ -218,6 +458,36 @@ function renderDashboard() {
   els.todayDateBadge.textContent = formatDate(today);
   renderTodayMenu();
   renderAttention(report);
+  renderProfileSnapshot();
+}
+
+function renderProfileSnapshot() {
+  if (!els.profileSnapshot) return;
+  const resident = findResident(localSettings.residentId);
+  if (!resident) {
+    els.profileSnapshot.innerHTML = `
+      <article class="mini-stat">
+        <span>Profile</span>
+        <strong>Not selected</strong>
+      </article>
+      <article class="mini-stat">
+        <span>Tip</span>
+        <strong>Set it in Account & Sync</strong>
+      </article>
+    `;
+    return;
+  }
+
+  const report = buildResidentReport(resident.id);
+  const todayMeal = state.meals.find((meal) => meal.date === todayIso() && meal.residentId === resident.id);
+  els.profileSnapshot.innerHTML = miniStats([
+    ["Resident", resident.name],
+    ["Room", resident.room],
+    ["This month meals", report.meals],
+    ["Today meals", todayMeal ? mealCount(todayMeal) : 0],
+    ["Paid", money(report.paid)],
+    ["Final balance", money(report.due)],
+  ]);
 }
 
 function renderTodayMenu() {
@@ -496,6 +766,14 @@ function updateResidentOptions() {
   els.paymentForm.elements.residentId.innerHTML = state.residents
     .map((resident) => `<option value="${resident.id}">${escapeHtml(resident.name)} - ${escapeHtml(resident.room)}</option>`)
     .join("");
+  if (els.profileForm?.elements.residentId) {
+    els.profileForm.elements.residentId.innerHTML =
+      `<option value="">No resident selected</option>` +
+      state.residents
+        .map((resident) => `<option value="${resident.id}">${escapeHtml(resident.name)} - ${escapeHtml(resident.room)}</option>`)
+        .join("");
+    els.profileForm.elements.residentId.value = localSettings.residentId || "";
+  }
 }
 
 function buildSettlementReport() {
@@ -607,7 +885,7 @@ function bySelectedMonth(items) {
 }
 
 function selectedMonth() {
-  return els.monthPicker.value || new Date().toISOString().slice(0, 7);
+  return els.monthPicker.value || todayIso().slice(0, 7);
 }
 
 function todayMealTotal() {
@@ -641,16 +919,76 @@ function persistAndRender(message) {
 
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!applyingRemoteState) {
+    const cloud = getCloud();
+    if (cloud?.saveState) cloud.saveState(state).catch(() => {});
+  }
 }
 
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return createDefaultState();
+  if (!saved) return normalizeAppState(createDefaultState());
   try {
-    return { ...createDefaultState(), ...JSON.parse(saved) };
+    return normalizeAppState({ ...createDefaultState(), ...JSON.parse(saved) });
   } catch {
-    return createDefaultState();
+    return normalizeAppState(createDefaultState());
   }
+}
+
+function mergeAppState(nextState) {
+  const normalized = normalizeAppState({ ...createDefaultState(), ...nextState });
+  APP_STATE_KEYS.forEach((key) => {
+    state[key] = normalized[key];
+  });
+}
+
+function normalizeAppState(appState) {
+  const defaults = createDefaultState();
+  const normalized = { ...defaults, ...appState };
+  normalized.ui = { ...defaults.ui, ...(appState.ui || {}) };
+  ["residents", "meals", "purchases", "menus", "payments"].forEach((key) => {
+    normalized[key] = Array.isArray(appState[key]) ? appState[key] : defaults[key];
+  });
+  return normalized;
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if (!saved) {
+    const settings = defaultSettings();
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    return settings;
+  }
+  try {
+    return { ...defaultSettings(), ...JSON.parse(saved) };
+  } catch {
+    const settings = defaultSettings();
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    return settings;
+  }
+}
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(localSettings));
+}
+
+function defaultSettings() {
+  return {
+    messId: defaultMessId(),
+    role: "manager",
+    residentId: "",
+  };
+}
+
+function defaultMessId() {
+  const randomPart = Math.random().toString(36).slice(2, 8);
+  return `mess-${randomPart}`;
+}
+
+function setFormDisabled(form, disabled) {
+  form?.querySelectorAll("input, select, button").forEach((control) => {
+    control.disabled = disabled;
+  });
 }
 
 function createDefaultState() {

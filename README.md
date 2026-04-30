@@ -31,12 +31,12 @@ For a production version, the next step would be adding login roles, cloud datab
 ## Run Locally
 
 ```powershell
-npm start
+node server.js
 ```
 
 Then open `http://127.0.0.1:8080`.
 
-On Windows, you can also run `start-messmate.bat`.
+On Windows, you can also run `start-messmate.bat`. If npm is available, `npm start` works too.
 
 ## Deploy Online
 

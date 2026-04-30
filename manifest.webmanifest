@@ -1,7 +1,7 @@
 {
   "name": "MessMate - Student Mess Manager",
   "short_name": "MessMate",
-  "description": "Mobile-ready student mess app for rent, meals, market costs, menu, payments, and settlement.",
+  "description": "Mobile-ready student mess app for fund contributions, meals, market costs, menu, and settlement.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

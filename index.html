@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f8b6f">
-    <meta name="description" content="Mobile-ready student mess app for rent, meals, market costs, menu, payments, and settlement.">
+    <meta name="description" content="Mobile-ready student mess app for fund contributions, meals, market costs, menu, and settlement.">
     <title>MessMate - Student Mess Manager</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icon-192.png">
@@ -24,11 +24,11 @@
 
         <nav class="nav-list">
           <button class="nav-link is-active" data-view="dashboard">Dashboard</button>
-          <button class="nav-link" data-view="residents">Residents & Rent</button>
+          <button class="nav-link" data-view="residents">Residents & Fund</button>
           <button class="nav-link" data-view="meals">Meal Count</button>
           <button class="nav-link" data-view="market">Market & Cost</button>
           <button class="nav-link" data-view="menu">Today's Menu</button>
-          <button class="nav-link" data-view="payments">Payments</button>
+          <button class="nav-link" data-view="payments">Fund Contributions</button>
           <button class="nav-link" data-view="settlement">Monthly Settlement</button>
           <button class="nav-link" data-view="account">Account & Sync</button>
         </nav>
@@ -91,12 +91,12 @@
               </div>
               <div class="use-case-grid">
                 <article>
-                  <strong>Rent showcase</strong>
-                  <span>Show each room's monthly rent, paid amount, and pending balance.</span>
+                  <strong>Fund contribution</strong>
+                  <span>Show how much each student has added to the common mess fund.</span>
                 </article>
                 <article>
                   <strong>Meal count billing</strong>
-                  <span>Charge each student based on actual breakfast, lunch, dinner, and guest meals.</span>
+                  <span>Compare each student's actual meals with their contribution to the fund.</span>
                 </article>
                 <article>
                   <strong>Market transparency</strong>
@@ -108,7 +108,7 @@
                 </article>
                 <article>
                   <strong>Monthly settlement</strong>
-                  <span>Calculate food cost per meal and export every member's final bill.</span>
+                  <span>Calculate food cost per meal, fund added, and each member's due or credit.</span>
                 </article>
                 <article>
                   <strong>Notice board</strong>
@@ -143,7 +143,7 @@
               <div class="panel-heading">
                 <div>
                   <p class="eyebrow">Members</p>
-                  <h3 id="residentsTitle">Residents & Rent</h3>
+                  <h3 id="residentsTitle">Residents & Fund</h3>
                 </div>
               </div>
               <form id="residentForm" class="data-form">
@@ -154,10 +154,6 @@
                 <label>
                   <span>Room</span>
                   <input name="room" required placeholder="A-101">
-                </label>
-                <label>
-                  <span>Monthly rent</span>
-                  <input name="rent" required type="number" min="0" step="100" placeholder="4500">
                 </label>
                 <label>
                   <span>Phone</span>
@@ -312,8 +308,8 @@
             <section class="section-panel">
               <div class="panel-heading">
                 <div>
-                  <p class="eyebrow">Collection</p>
-                  <h3 id="paymentsTitle">Payments</h3>
+                  <p class="eyebrow">Common fund</p>
+                  <h3 id="paymentsTitle">Fund Contributions</h3>
                 </div>
               </div>
               <form id="paymentForm" class="data-form">
@@ -326,11 +322,11 @@
                   <select name="residentId" required></select>
                 </label>
                 <label>
-                  <span>Type</span>
+                  <span>Purpose</span>
                   <select name="type">
-                    <option value="rent">Rent</option>
-                    <option value="meal">Meal</option>
-                    <option value="other">Other</option>
+                    <option value="fund">Monthly fund</option>
+                    <option value="market">Market advance</option>
+                    <option value="adjustment">Adjustment</option>
                   </select>
                 </label>
                 <label>
@@ -345,7 +341,7 @@
                     <option>Bank</option>
                   </select>
                 </label>
-                <button class="button primary" type="submit">Record payment</button>
+                <button class="button primary" type="submit">Add contribution</button>
               </form>
               <div id="paymentTable" class="table-wrap"></div>
             </section>
@@ -403,7 +399,7 @@
                     <strong>Shared mess code</strong>
                     <span id="messCodeBadge" class="badge">Not connected</span>
                   </div>
-                  <p>Use one mess code for the whole mess. Open the same code on another phone after login to sync residents, meals, purchases, payments, and settlement.</p>
+                  <p>Use one mess code for the whole mess. Open the same code on another phone after login to sync residents, meals, purchases, fund contributions, and settlement.</p>
                   <form id="messCloudForm" class="stack-form">
                     <label>
                       <span>Mess code</span>

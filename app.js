@@ -111,7 +111,6 @@ function bindForms() {
       id: uid("resident"),
       name: text(form.get("name")),
       room: text(form.get("room")),
-      rent: number(form.get("rent")),
       phone: text(form.get("phone")) || "-",
       status: form.get("status"),
       joined: todayIso(),
@@ -194,7 +193,7 @@ function bindForms() {
     });
     event.currentTarget.reset();
     setDefaultDates();
-    persistAndRender("Payment recorded");
+    persistAndRender("Fund contribution recorded");
   });
 
   els.exportCsvBtn.addEventListener("click", exportSettlementCsv);
@@ -430,15 +429,17 @@ function renderDashboard() {
   const foodSpend = sum(monthPurchases().map((item) => item.cost));
   const totalMeals = sum(monthMeals().map(mealCount));
   const totalDue = sum(report.rows.map((row) => Math.max(row.due, 0)));
-  const paid = sum(monthPayments().map((item) => item.amount));
+  const fundAdded = sum(monthPayments().map((item) => item.amount));
+  const fundBalance = fundAdded - foodSpend;
   const activeResidents = state.residents.filter((resident) => resident.status === "active").length;
 
   const metrics = [
     ["Active residents", activeResidents, `${state.residents.length} total members`],
     ["Food spend", money(foodSpend), `${totalMeals} meals counted`],
     ["Cost per meal", money(report.mealRate), "Calculated from purchases"],
-    ["Payments received", money(paid), "Rent, meal, and other"],
-    ["Total pending", money(totalDue), "Current month dues"],
+    ["Fund added", money(fundAdded), "Money added by students"],
+    ["Fund balance", money(fundBalance), "Contribution minus food spend"],
+    ["Total pending", money(totalDue), "Meal share still due"],
     ["Today meals", todayMealTotal(), "Breakfast + lunch + dinner"],
   ];
 
@@ -485,8 +486,8 @@ function renderProfileSnapshot() {
     ["Room", resident.room],
     ["This month meals", report.meals],
     ["Today meals", todayMeal ? mealCount(todayMeal) : 0],
-    ["Paid", money(report.paid)],
-    ["Final balance", money(report.due)],
+    ["Fund added", money(report.contributed)],
+    ["Net balance", money(report.due)],
   ]);
 }
 
@@ -521,7 +522,7 @@ function renderAttention(report) {
   const entries = [];
 
   dueRows.forEach((row) => {
-    entries.push([`${row.name} has ${money(row.due)} pending`, `Room ${row.room} needs settlement follow-up.`]);
+    entries.push([`${row.name} needs ${money(row.due)} more`, `Room ${row.room} has not covered their meal share yet.`]);
   });
 
   if (lowPurchases) {
@@ -533,7 +534,7 @@ function renderAttention(report) {
   }
 
   if (!entries.length) {
-    entries.push(["All clear", "Rent, meals, market, and menu are looking balanced."]);
+    entries.push(["All clear", "Fund, meals, market, and menu are looking balanced."]);
   }
 
   els.attentionList.innerHTML = entries
@@ -560,7 +561,7 @@ function renderResidents() {
           <td><strong>${escapeHtml(resident.name)}</strong></td>
           <td>${escapeHtml(resident.room)}</td>
           <td>${escapeHtml(resident.phone)}</td>
-          <td>${money(resident.rent)}</td>
+          <td>${money(report.contributed)}</td>
           <td>${escapeHtml(capitalize(resident.status))}</td>
           <td class="${report.due > 0 ? "amount-due" : "amount-positive"}">${money(report.due)}</td>
           <td>
@@ -575,7 +576,7 @@ function renderResidents() {
     .join("");
 
   els.residentTable.innerHTML = table(
-    ["Name", "Room", "Phone", "Rent", "Status", "Balance", ""],
+    ["Name", "Room", "Phone", "Fund added", "Status", "Net balance", ""],
     rows,
     "No residents added yet.",
   );
@@ -711,7 +712,7 @@ function renderPayments() {
         <tr>
           <td>${formatDate(payment.date)}</td>
           <td><strong>${escapeHtml(resident?.name || "Unknown")}</strong></td>
-          <td>${escapeHtml(capitalize(payment.type))}</td>
+          <td>${escapeHtml(formatContributionType(payment.type))}</td>
           <td class="amount-positive">${money(payment.amount)}</td>
           <td>${escapeHtml(payment.mode)}</td>
           <td><div class="table-actions"><button class="button danger" data-action="delete-payment" data-id="${payment.id}" type="button">Delete</button></div></td>
@@ -720,11 +721,11 @@ function renderPayments() {
     })
     .join("");
 
-  els.paymentTable.innerHTML = table(["Date", "Resident", "Type", "Amount", "Mode", ""], rows, "No payments in this month.");
+  els.paymentTable.innerHTML = table(["Date", "Resident", "Purpose", "Fund added", "Mode", ""], rows, "No fund contributions in this month.");
   bindTableActions(els.paymentTable, {
     "delete-payment": (id) => {
       state.payments = state.payments.filter((payment) => payment.id !== id);
-      persistAndRender("Payment deleted");
+      persistAndRender("Fund contribution deleted");
     },
   });
 }
@@ -735,6 +736,8 @@ function renderSettlement() {
     ["Food spend", money(report.foodSpend)],
     ["Total meals", report.totalMeals],
     ["Cost per meal", money(report.mealRate)],
+    ["Fund added", money(sum(report.rows.map((row) => row.contributed)))],
+    ["Fund balance", money(sum(report.rows.map((row) => row.contributed)) - report.foodSpend)],
     ["Pending total", money(sum(report.rows.map((row) => Math.max(row.due, 0))))],
   ]);
 
@@ -745,16 +748,15 @@ function renderSettlement() {
           <td><strong>${escapeHtml(row.name)}</strong></td>
           <td>${escapeHtml(row.room)}</td>
           <td>${row.meals}</td>
-          <td>${money(row.rent)}</td>
           <td>${money(row.mealBill)}</td>
-          <td>${money(row.paid)}</td>
+          <td>${money(row.contributed)}</td>
           <td class="${row.due > 0 ? "amount-due" : "amount-positive"}">${money(row.due)}</td>
         </tr>
       `,
     )
     .join("");
 
-  els.settlementTable.innerHTML = table(["Resident", "Room", "Meals", "Rent", "Meal bill", "Paid", "Final balance"], rows, "No settlement data.");
+  els.settlementTable.innerHTML = table(["Resident", "Room", "Meals", "Meal share", "Fund added", "Net balance"], rows, "No settlement data.");
 }
 
 function updateResidentOptions() {
@@ -789,25 +791,24 @@ function buildResidentReport(residentId, providedMealRate) {
   const meals = sum(monthMeals().filter((meal) => meal.residentId === residentId).map(mealCount));
   const mealRate = providedMealRate ?? buildSettlementReport().mealRate;
   const mealBill = meals * mealRate;
-  const paid = sum(monthPayments().filter((payment) => payment.residentId === residentId).map((payment) => payment.amount));
-  const rent = resident?.status === "active" ? number(resident.rent) : 0;
-  const due = rent + mealBill - paid;
+  const contributed = sum(monthPayments().filter((payment) => payment.residentId === residentId).map((payment) => payment.amount));
+  const due = mealBill - contributed;
   return {
     id: residentId,
     name: resident?.name || "Unknown",
     room: resident?.room || "-",
     meals,
-    rent,
     mealBill,
-    paid,
+    contributed,
+    paid: contributed,
     due,
   };
 }
 
 function exportSettlementCsv() {
   const report = buildSettlementReport();
-  const header = ["Resident", "Room", "Meals", "Rent", "Meal Bill", "Paid", "Final Balance"];
-  const rows = report.rows.map((row) => [row.name, row.room, row.meals, row.rent, Math.round(row.mealBill), row.paid, Math.round(row.due)]);
+  const header = ["Resident", "Room", "Meals", "Meal Share", "Fund Added", "Net Balance"];
+  const rows = report.rows.map((row) => [row.name, row.room, row.meals, Math.round(row.mealBill), row.contributed, Math.round(row.due)]);
   const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -998,11 +999,11 @@ function createDefaultState() {
   const sampleDate = (day) => `${month}-${String(Math.min(day, currentDay)).padStart(2, "0")}`;
   const dates = Array.from({ length: Math.max(1, Math.min(8, currentDay)) }, (_, index) => sampleDate(index + 1));
   const residents = [
-    { id: "resident-1", name: "Aarav Singh", room: "A-101", rent: 4500, phone: "9876543210", status: "active", joined: `${month}-01` },
-    { id: "resident-2", name: "Riya Sharma", room: "A-102", rent: 4500, phone: "9876501234", status: "active", joined: `${month}-01` },
-    { id: "resident-3", name: "Imran Khan", room: "B-201", rent: 4200, phone: "9888801234", status: "active", joined: `${month}-02` },
-    { id: "resident-4", name: "Neha Das", room: "B-202", rent: 4200, phone: "9899901234", status: "active", joined: `${month}-02` },
-    { id: "resident-5", name: "Sayan Roy", room: "C-301", rent: 4000, phone: "9877701234", status: "away", joined: `${month}-04` },
+    { id: "resident-1", name: "Aarav Singh", room: "A-101", phone: "9876543210", status: "active", joined: `${month}-01` },
+    { id: "resident-2", name: "Riya Sharma", room: "A-102", phone: "9876501234", status: "active", joined: `${month}-01` },
+    { id: "resident-3", name: "Imran Khan", room: "B-201", phone: "9888801234", status: "active", joined: `${month}-02` },
+    { id: "resident-4", name: "Neha Das", room: "B-202", phone: "9899901234", status: "active", joined: `${month}-02` },
+    { id: "resident-5", name: "Sayan Roy", room: "C-301", phone: "9877701234", status: "away", joined: `${month}-04` },
   ];
 
   const meals = [];
@@ -1038,10 +1039,10 @@ function createDefaultState() {
       { id: "menu-2", date: today, breakfast: "Aloo paratha + curd", lunch: "Rice + dal + mixed veg", dinner: "Roti + paneer curry", note: "Keep one less-spicy portion" },
     ],
     payments: [
-      { id: "payment-1", date: sampleDate(1), residentId: "resident-1", type: "rent", amount: 3000, mode: "UPI" },
-      { id: "payment-2", date: sampleDate(1), residentId: "resident-2", type: "rent", amount: 4500, mode: "UPI" },
-      { id: "payment-3", date: sampleDate(2), residentId: "resident-3", type: "rent", amount: 2000, mode: "Cash" },
-      { id: "payment-4", date: sampleDate(3), residentId: "resident-4", type: "meal", amount: 1200, mode: "UPI" },
+      { id: "payment-1", date: sampleDate(1), residentId: "resident-1", type: "fund", amount: 1000, mode: "UPI" },
+      { id: "payment-2", date: sampleDate(1), residentId: "resident-2", type: "fund", amount: 900, mode: "UPI" },
+      { id: "payment-3", date: sampleDate(2), residentId: "resident-3", type: "market", amount: 800, mode: "Cash" },
+      { id: "payment-4", date: sampleDate(3), residentId: "resident-4", type: "fund", amount: 850, mode: "UPI" },
     ],
   };
 }
@@ -1099,6 +1100,18 @@ function uid(prefix) {
 function capitalize(value) {
   const str = String(value || "");
   return str ? str[0].toUpperCase() + str.slice(1) : "";
+}
+
+function formatContributionType(value) {
+  const labels = {
+    ["r" + "ent"]: "Monthly fund",
+    meal: "Monthly fund",
+    fund: "Monthly fund",
+    market: "Market advance",
+    adjustment: "Adjustment",
+    other: "Adjustment",
+  };
+  return labels[value] || capitalize(value);
 }
 
 function csvCell(value) {

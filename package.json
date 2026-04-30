@@ -1,7 +1,7 @@
 {
   "name": "messmate-student-mess-app",
   "version": "1.0.0",
-  "description": "Ready-to-run student mess management app for rent, meal count, purchases, menu, payments, and monthly settlement.",
+  "description": "Ready-to-run student mess management app for fund contributions, meal count, purchases, menu, and monthly settlement.",
   "private": true,
   "scripts": {
     "generate-icons": "node scripts/generate-icons.js",
@@ -11,7 +11,7 @@
   "keywords": [
     "mess",
     "student",
-    "rent",
+    "fund",
     "meal-count",
     "dashboard"
   ],

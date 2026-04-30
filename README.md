@@ -4,11 +4,11 @@ A ready-to-run student mess management app. It now works as an installable mobil
 
 ## What It Handles
 
-- Residents and monthly rent display
+- Residents and their fund contribution display
 - Individual breakfast, lunch, dinner, and guest meal counts
 - Grocery and market purchases with item cost, quantity, buyer, and category
 - Today's prepared food menu
-- Rent and meal payments
+- Individual fund contribution tracking
 - Monthly settlement with automatic food cost per meal
 - CSV export for sharing bills
 - Mobile install support through PWA manifest and service worker
@@ -16,13 +16,13 @@ A ready-to-run student mess management app. It now works as an installable mobil
 
 ## Suggested Real Use Cases
 
-- Student sees rent due, meal bill, and total balance before paying.
+- Student sees meal share, fund added, and net due or credit.
 - Mess manager records daily meal counts for every resident.
 - Market buyer adds every food item with cost so spending stays transparent.
 - Cook checks the daily menu and kitchen notes.
 - Monthly settlement splits food expense by actual meal count.
 - Guest meals are counted separately so extra consumption is not hidden.
-- Away residents can be marked inactive so rent or meals are not accidentally counted.
+- Away residents can be marked inactive so meal counts are not accidentally added.
 - Manager signs in on two phones and opens the same mess code to keep entries synced.
 - Students install the app on their phone and use their profile to check menu, meals, and dues.
 

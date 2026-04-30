@@ -72,6 +72,11 @@ button {
   letter-spacing: 0;
 }
 
+.brand-mark svg {
+  width: 32px;
+  height: 32px;
+}
+
 .brand-block h1,
 .topbar h2,
 .section-panel h3,

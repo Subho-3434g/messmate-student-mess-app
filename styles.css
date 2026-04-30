@@ -711,6 +711,17 @@ tr:last-child td {
   text-align: center;
 }
 
+/* Hamburger menu button */
+#hamburgerBtn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  color: #ffffff;
+}
+
 @media (max-width: 1180px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -749,16 +760,68 @@ tr:last-child td {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
+  #hamburgerBtn {
+    display: block;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 280px;
+    height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 300ms ease;
+    padding: 16px 12px;
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .sidebar::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+
   .topbar {
-    position: static;
-    align-items: stretch;
-    flex-direction: column;
-    padding: 18px;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 12px 14px;
+    flex-direction: row;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .topbar > div:first-child {
+    flex-grow: 1;
+  }
+
+  .topbar h2 {
+    font-size: 1.2rem;
+  }
+
+  .topbar > div:first-child p {
+    display: none;
   }
 
   main {
-    padding: 18px;
+    padding: 14px;
   }
 
   .nav-list,
@@ -775,35 +838,14 @@ tr:last-child td {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    position: sticky;
-    top: 0;
-    z-index: 12;
-    height: auto;
-    padding: 12px;
-  }
-
-  .brand-block {
-    margin-bottom: 10px;
-  }
-
   .brand-mark {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
   }
 
-  .nav-list {
-    display: flex;
-    gap: 8px;
-    margin: 0 -4px;
-    overflow-x: auto;
-    padding: 0 4px 4px;
-  }
-
-  .nav-link {
-    flex: 0 0 auto;
-    width: auto;
-    white-space: nowrap;
+  .brand-block h1 {
+    font-size: 1rem;
   }
 
   .sidebar-note {
@@ -811,12 +853,18 @@ tr:last-child td {
   }
 
   .topbar-actions {
-    justify-content: flex-start;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
   }
 
   .sync-pill {
-    max-width: 100%;
-    white-space: normal;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  .month-control {
+    display: none;
   }
 
   .panel-heading {
@@ -825,6 +873,205 @@ tr:last-child td {
 
   .mess-visual {
     width: 100%;
-    height: 130px;
+    height: 100px;
+  }
+
+  .metric-card strong {
+    font-size: 1.6rem;
+  }
+
+  .data-form {
+    grid-template-columns: 1fr;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .button {
+    min-height: 38px;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+  .account-card {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  .topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .topbar h2 {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  main {
+    padding: 10px;
+  }
+
+  .sidebar {
+    max-width: 75vw;
+  }
+
+  .brand-block {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .brand-block h1 {
+    font-size: 0.95rem;
+  }
+
+  .nav-link {
+    padding: 10px 10px;
+    font-size: 0.9rem;
+  }
+
+  .eyebrow {
+    font-size: 0.7rem;
+  }
+
+  #resetDemoBtn {
+    display: none;
+  }
+
+  #installAppBtn {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .sync-pill {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+
+  .panel-heading {
+    margin-bottom: 12px;
+  }
+
+  .section-panel {
+    margin-bottom: 12px;
+  }
+
+  .metric-card {
+    min-height: 100px;
+    padding: 12px;
+  }
+
+  .metric-card strong {
+    font-size: 1.4rem;
+  }
+
+  .metric-card span {
+    font-size: 0.8rem;
+  }
+
+  .metric-card small {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+
+  .menu-card article {
+    grid-template-columns: 60px 1fr;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .meal-chip {
+    width: 50px;
+    height: 50px;
+    font-size: 0.8rem;
+  }
+
+  .use-case-grid article,
+  .attention-list article,
+  .menu-history article {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .use-case-grid article strong,
+  .attention-list article strong,
+  .menu-history article strong {
+    font-size: 0.9rem;
+  }
+
+  .data-form {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .data-form label {
+    gap: 4px;
+  }
+
+  .data-form span {
+    font-size: 0.75rem;
+  }
+
+  .data-form input,
+  .data-form select {
+    min-height: 36px;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+
+  .button {
+    min-height: 36px;
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  th,
+  td {
+    padding: 8px 10px;
+  }
+
+  .table-actions .button {
+    min-height: 30px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .toast {
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100vw - 24px);
+    font-size: 0.9rem;
+  }
+
+  .account-grid {
+    gap: 10px;
+  }
+
+  .account-card {
+    padding: 10px;
+  }
+
+  .account-card strong {
+    font-size: 0.95rem;
+  }
+
+  .setup-list {
+    font-size: 0.85rem;
+    gap: 5px;
   }
 }

@@ -60,6 +60,8 @@ const els = {
   profileForm: document.querySelector("#profileForm"),
   installBadge: document.querySelector("#installBadge"),
   toast: document.querySelector("#toast"),
+  hamburgerBtn: document.querySelector("#hamburgerBtn"),
+  sidebar: document.querySelector(".sidebar"),
 };
 
 init();
@@ -83,8 +85,29 @@ function bindNavigation() {
       document.querySelectorAll(".nav-link").forEach((item) => item.classList.toggle("is-active", item === button));
       document.querySelectorAll(".view").forEach((view) => view.classList.toggle("is-active", view.id === target));
       els.pageTitle.textContent = button.textContent;
+      
+      // Close sidebar on mobile after navigation
+      if (els.sidebar && els.hamburgerBtn) {
+        els.sidebar.classList.remove("is-open");
+      }
     });
   });
+
+  // Hamburger menu toggle
+  if (els.hamburgerBtn) {
+    els.hamburgerBtn.addEventListener("click", () => {
+      els.sidebar.classList.toggle("is-open");
+    });
+    
+    // Close menu when clicking overlay (sidebar::after)
+    document.addEventListener("click", (e) => {
+      if (els.sidebar.classList.contains("is-open") && 
+          !e.target.closest(".sidebar") && 
+          !e.target.closest("#hamburgerBtn")) {
+        els.sidebar.classList.remove("is-open");
+      }
+    });
+  }
 
   els.monthPicker.addEventListener("change", () => {
     state.ui = { ...state.ui, month: els.monthPicker.value };

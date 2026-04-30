@@ -10,27 +10,35 @@ generateIcon(512, path.join(assetsDir, "icon-512.png"));
 
 function generateIcon(size, outputPath) {
   const pixels = Buffer.alloc(size * size * 4);
-  const bg = [15, 139, 111, 255];
-  const bgDark = [10, 108, 86, 255];
-  const white = [255, 255, 255, 255];
-  const mint = [214, 244, 235, 255];
+  const bgTop = [37, 126, 248, 255];
+  const bgBottom = [15, 139, 111, 255];
+  const plate = [255, 255, 255, 255];
+  const dome = [255, 154, 41, 255];
+  const highlight = [255, 220, 132, 255];
+  const spoon = [255, 255, 255, 255];
+  const shadow = [0, 0, 0, 64];
 
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
+      const t = y / (size - 1);
       const index = (y * size + x) * 4;
-      const shade = y > size * 0.62 ? bgDark : bg;
-      pixels[index] = shade[0];
-      pixels[index + 1] = shade[1];
-      pixels[index + 2] = shade[2];
-      pixels[index + 3] = shade[3];
+      pixels[index] = Math.round(bgTop[0] * (1 - t) + bgBottom[0] * t);
+      pixels[index + 1] = Math.round(bgTop[1] * (1 - t) + bgBottom[1] * t);
+      pixels[index + 2] = Math.round(bgTop[2] * (1 - t) + bgBottom[2] * t);
+      pixels[index + 3] = 255;
     }
   }
 
-  roundedFrame(pixels, size, 0.09, mint);
-  drawM(pixels, size, 0.17, 0.28, 0.28, 0.44, white);
-  drawM(pixels, size, 0.52, 0.28, 0.28, 0.44, white);
-  rect(pixels, size, 0.19, 0.76, 0.62, 0.055, mint);
-  rect(pixels, size, 0.29, 0.84, 0.42, 0.038, white);
+  fillEllipse(pixels, size, 0.5, 0.65, 0.42, 0.16, plate);
+  fillEllipse(pixels, size, 0.5, 0.58, 0.32, 0.24, dome);
+  fillEllipse(pixels, size, 0.55, 0.52, 0.08, 0.08, highlight);
+  drawRoundedRect(pixels, size, 0.35, 0.45, 0.30, 0.08, 0.04, spoon);
+  drawRoundedRect(pixels, size, 0.45, 0.37, 0.05, 0.20, 0.025, spoon);
+  fillCircle(pixels, size, 0.48, 0.32, 0.04, spoon);
+  fillEllipse(pixels, size, 0.5, 0.18, 0.22, 0.10, plate);
+  fillEllipse(pixels, size, 0.5, 0.18, 0.10, 0.04, highlight);
+  addShadow(pixels, size, 0.5, 0.62, 0.30, 0.06, shadow);
+  drawRoundedFrame(pixels, size, 0.06, [255, 255, 255, 32]);
 
   const raw = Buffer.alloc((size * 4 + 1) * size);
   for (let y = 0; y < size; y += 1) {
@@ -49,22 +57,67 @@ function generateIcon(size, outputPath) {
   fs.writeFileSync(outputPath, png);
 }
 
-function roundedFrame(pixels, size, inset, color) {
+function drawRoundedFrame(pixels, size, inset, color) {
   const pad = Math.round(size * inset);
-  const thickness = Math.max(5, Math.round(size * 0.03));
+  const thickness = Math.max(4, Math.round(size * 0.02));
   rectPx(pixels, size, pad, pad, size - pad * 2, thickness, color);
   rectPx(pixels, size, pad, size - pad - thickness, size - pad * 2, thickness, color);
   rectPx(pixels, size, pad, pad, thickness, size - pad * 2, color);
   rectPx(pixels, size, size - pad - thickness, pad, thickness, size - pad * 2, color);
 }
 
-function drawM(pixels, size, x, y, w, h, color) {
-  const bar = w * 0.16;
-  rect(pixels, size, x, y, bar, h, color);
-  rect(pixels, size, x + w - bar, y, bar, h, color);
-  rect(pixels, size, x + w * 0.20, y, bar, h * 0.56, color);
-  rect(pixels, size, x + w * 0.50, y, bar, h * 0.56, color);
-  rect(pixels, size, x + w * 0.32, y + h * 0.33, w * 0.36, h * 0.14, color);
+function drawRoundedRect(pixels, size, x, y, w, h, radius, color) {
+  const xPx = Math.round(x * size);
+  const yPx = Math.round(y * size);
+  const wPx = Math.round(w * size);
+  const hPx = Math.round(h * size);
+  const rPx = Math.round(radius * size);
+  fillEllipse(pixels, size, (xPx + rPx) / size, (yPx + rPx) / size, radius, radius, color);
+  fillEllipse(pixels, size, (xPx + wPx - rPx) / size, (yPx + rPx) / size, radius, radius, color);
+  fillEllipse(pixels, size, (xPx + rPx) / size, (yPx + hPx - rPx) / size, radius, radius, color);
+  fillEllipse(pixels, size, (xPx + wPx - rPx) / size, (yPx + hPx - rPx) / size, radius, radius, color);
+  rect(pixels, size, x + radius, y, w - radius * 2, h, color);
+  rect(pixels, size, x, y + radius, w, h - radius * 2, color);
+}
+
+function addShadow(pixels, size, cx, cy, rx, ry, color) {
+  const alpha = color[3];
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const dx = (x / size - cx) / rx;
+      const dy = (y / size - cy) / ry;
+      if (dx * dx + dy * dy <= 1) {
+        const index = (y * size + x) * 4;
+        pixels[index] = Math.round((pixels[index] * (255 - alpha) + color[0] * alpha) / 255);
+        pixels[index + 1] = Math.round((pixels[index + 1] * (255 - alpha) + color[1] * alpha) / 255);
+        pixels[index + 2] = Math.round((pixels[index + 2] * (255 - alpha) + color[2] * alpha) / 255);
+      }
+    }
+  }
+}
+
+function fillCircle(pixels, size, cx, cy, r, color) {
+  fillEllipse(pixels, size, cx, cy, r, r, color);
+}
+
+function fillEllipse(pixels, size, cx, cy, rx, ry, color) {
+  const minX = Math.max(0, Math.floor((cx - rx) * size));
+  const maxX = Math.min(size, Math.ceil((cx + rx) * size));
+  const minY = Math.max(0, Math.floor((cy - ry) * size));
+  const maxY = Math.min(size, Math.ceil((cy + ry) * size));
+  for (let y = minY; y < maxY; y += 1) {
+    for (let x = minX; x < maxX; x += 1) {
+      const dx = (x / size - cx) / rx;
+      const dy = (y / size - cy) / ry;
+      if (dx * dx + dy * dy <= 1) {
+        const index = (y * size + x) * 4;
+        pixels[index] = color[0];
+        pixels[index + 1] = color[1];
+        pixels[index + 2] = color[2];
+        pixels[index + 3] = color[3];
+      }
+    }
+  }
 }
 
 function rect(pixels, size, x, y, w, h, color) {

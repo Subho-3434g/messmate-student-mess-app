@@ -6,9 +6,8 @@ const CORE_ASSETS = [
   "./app.js",
   "./cloud.js",
   "./manifest.webmanifest",
-  "./assets/mess-board.svg",
-  "./assets/icon-192.png",
-  "./assets/icon-512.png"
+  "./assets/logo.png",
+  "./assets/mess-board.svg"
 ];
 
 self.addEventListener("install", (event) => {

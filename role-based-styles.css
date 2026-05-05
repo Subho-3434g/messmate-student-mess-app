@@ -1,0 +1,298 @@
+/* Role-Based UI Styles */
+
+/* Role Badge */
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.role-badge.role-admin {
+  background-color: #ff5252;
+  color: white;
+}
+
+.role-badge.role-manager {
+  background-color: #ff9800;
+  color: white;
+}
+
+.role-badge.role-student {
+  background-color: #4caf50;
+  color: white;
+}
+
+/* Info Banner */
+.info-banner {
+  padding: 12px;
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  color: #1565c0;
+  font-size: 0.95rem;
+}
+
+.info-banner.warning {
+  background-color: #fff3e0;
+  border-left-color: #ff9800;
+  color: #e65100;
+}
+
+.info-banner.error {
+  background-color: #ffebee;
+  border-left-color: #f44336;
+  color: #c62828;
+}
+
+.info-banner.success {
+  background-color: #e8f5e9;
+  border-left-color: #4caf50;
+  color: #2e7d32;
+}
+
+/* Admin Panel Styles */
+.admin-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-section:last-child {
+  border-bottom: none;
+}
+
+.admin-section h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.admin-section .info-text {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+/* Month Selector Grid */
+.month-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.month-selector .check-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-selector .check-field input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.month-selector .check-field span {
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+/* Permission Denied Overlay */
+.permission-denied {
+  position: relative;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.permission-denied::after {
+  content: "🔒 Read-only";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 10;
+}
+
+/* Manager Access Table */
+.manager-access-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.manager-access-table thead {
+  background-color: #f5f5f5;
+}
+
+.manager-access-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #ddd;
+}
+
+.manager-access-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.manager-access-table tr:hover {
+  background-color: #fafafa;
+}
+
+.manager-access-table .months-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.manager-access-table .month-tag {
+  display: inline-block;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* User List Table */
+.user-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.user-list-table thead {
+  background-color: #f5f5f5;
+}
+
+.user-list-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #ddd;
+}
+
+.user-list-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.user-list-table tr:hover {
+  background-color: #fafafa;
+}
+
+.user-list-table .role-cell {
+  font-weight: 600;
+}
+
+.user-list-table .role-cell.admin {
+  color: #ff5252;
+}
+
+.user-list-table .role-cell.manager {
+  color: #ff9800;
+}
+
+.user-list-table .role-cell.student {
+  color: #4caf50;
+}
+
+/* Disabled Form State */
+form.disabled-form {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+form.disabled-form input,
+form.disabled-form select,
+form.disabled-form textarea,
+form.disabled-form button[type="submit"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Access Control Badge */
+.access-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.access-badge.granted {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.access-badge.denied {
+  background-color: #ffcdd2;
+  color: #c62828;
+}
+
+.access-badge.pending {
+  background-color: #fff9c4;
+  color: #f57f17;
+}
+
+/* Role-specific view styling */
+body.admin-mode {
+  --primary-color: #ff5252;
+}
+
+body.manager-mode {
+  --primary-color: #ff9800;
+}
+
+body.student-mode {
+  --primary-color: #4caf50;
+}
+
+/* Responsive Admin Panel */
+@media (max-width: 768px) {
+  .admin-section {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+  }
+
+  .month-selector {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .manager-access-table,
+  .user-list-table {
+    font-size: 0.9rem;
+  }
+
+  .manager-access-table th,
+  .manager-access-table td,
+  .user-list-table th,
+  .user-list-table td {
+    padding: 8px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .admin-section {
+    page-break-inside: avoid;
+  }
+
+  .role-badge,
+  .info-banner {
+    border: 1px solid #000;
+  }
+}

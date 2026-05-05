@@ -248,7 +248,7 @@ function bindAccount() {
     event.preventDefault();
     const cloud = getCloud();
     if (!cloud?.isConfigured()) {
-      showToast("Add Firebase config first");
+      showToast("Add Supabase config first");
       return;
     }
 
@@ -343,16 +343,16 @@ function renderAccount() {
   document.body.classList.toggle("student-mode", localSettings.role === "student");
 
   if (els.cloudConfigBadge) {
-    els.cloudConfigBadge.textContent = configured ? "Firebase ready" : "Local only";
+    els.cloudConfigBadge.textContent = configured ? "Supabase ready" : "Local only";
   }
 
   if (els.cloudStatusText) {
     if (!configured) {
-      els.cloudStatusText.textContent = "Cloud login is built in, but Firebase keys are not added yet. The app is working in local/offline mode.";
+      els.cloudStatusText.textContent = "Cloud login is built in, but Supabase keys are not added yet. The app is working in local/offline mode.";
     } else if (error) {
       els.cloudStatusText.textContent = `Cloud load error: ${error}`;
     } else if (!ready) {
-      els.cloudStatusText.textContent = "Loading Firebase services...";
+      els.cloudStatusText.textContent = "Loading Supabase services...";
     } else if (currentUser) {
       els.cloudStatusText.textContent = `Signed in as ${currentUser.email || "mess user"}.`;
     } else {

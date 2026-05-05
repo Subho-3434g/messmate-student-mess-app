@@ -1,0 +1,109 @@
+<!-- Admin Panel Section - Add this to index.html inside the main element -->
+
+<section id="admin" class="view" aria-labelledby="adminTitle">
+  <section class="section-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">System Administration</p>
+        <h3 id="adminTitle">Admin Panel</h3>
+      </div>
+    </div>
+    
+    <!-- User Role Management -->
+    <div class="admin-section">
+      <h4>User Role Management</h4>
+      <form id="userRoleForm" class="data-form">
+        <label>
+          <span>User Email</span>
+          <input name="userId" required placeholder="Enter user email or ID">
+        </label>
+        <label>
+          <span>Role</span>
+          <select name="role" required>
+            <option value="student">Student</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <button class="button primary" type="submit">Update User Role</button>
+      </form>
+      
+      <h4>All Users</h4>
+      <div id="userListTable" class="table-wrap"></div>
+    </div>
+
+    <!-- Manager Access Control -->
+    <div class="admin-section">
+      <h4>Grant Manager Access</h4>
+      <p class="info-text">Assign managers to specific messes for specific months</p>
+      
+      <form id="managerAccessForm" class="data-form">
+        <label>
+          <span>Manager Email</span>
+          <input name="managerId" required placeholder="Enter manager email or ID">
+        </label>
+        <label>
+          <span>Mess ID</span>
+          <input name="messId" required placeholder="Enter mess code">
+        </label>
+        <label>
+          <span>Select Months</span>
+          <div class="month-selector">
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-01">
+              <span>January 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-02">
+              <span>February 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-03">
+              <span>March 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-04">
+              <span>April 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-05">
+              <span>May 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-06">
+              <span>June 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-07">
+              <span>July 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-08">
+              <span>August 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-09">
+              <span>September 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-10">
+              <span>October 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-11">
+              <span>November 2024</span>
+            </label>
+            <label class="check-field">
+              <input name="months" type="checkbox" value="2024-12">
+              <span>December 2024</span>
+            </label>
+          </div>
+        </label>
+        <button class="button primary" type="submit">Grant Manager Access</button>
+      </form>
+
+      <h4>Manager Access Records</h4>
+      <div id="managerAccessTable" class="table-wrap"></div>
+    </div>
+  </section>
+</section>

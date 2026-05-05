@@ -1,23 +1,27 @@
-const FIREBASE_VERSION = "10.12.4";
-const config = window.MESSMATE_FIREBASE_CONFIG || {};
-const configured = Boolean(config.apiKey && config.authDomain && config.projectId && config.appId);
+/**
+ * Supabase Cloud Integration for MessMate
+ */
+
+const SUPABASE_VERSION = "2.43.4";
+const config = window.MESSMATE_SUPABASE_CONFIG || {};
+const configured = Boolean(config.url && config.key);
 const state = {
   ready: false,
   error: "",
   user: null,
+  userRole: null, // "admin", "manager", "student"
   messId: "",
   unsubscribe: null,
   saveTimer: null,
-  docRef: null,
+  supabase: null,
 };
-
-let firebase = {};
 
 const api = {
   isConfigured: () => configured,
   isReady: () => state.ready,
   getError: () => state.error,
   getUser: () => state.user,
+  getUserRole: () => state.userRole,
   getMessId: () => state.messId,
   signUp,
   signIn,
@@ -25,52 +29,146 @@ const api = {
   openMess,
   saveState,
   closeMess,
+  setUserRole,
+  grantManagerAccess,
+  revokeManagerAccess,
+  getManagerAccessList,
 };
 
 window.MessCloud = api;
 
 if (configured) {
-  Promise.all([
-    import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app.js`),
-    import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-auth.js`),
-    import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-firestore.js`),
-  ])
-    .then(([appModule, authModule, firestoreModule]) => {
-      firebase = { ...appModule, ...authModule, ...firestoreModule };
-      const app = firebase.initializeApp(config);
-      state.auth = firebase.getAuth(app);
-      state.db = firebase.getFirestore(app);
-      firebase.enableIndexedDbPersistence(state.db).catch(() => {});
-      firebase.onAuthStateChanged(state.auth, (user) => {
-        state.user = user;
-        window.dispatchEvent(new CustomEvent("messcloud-user", { detail: safeUser(user) }));
+  // Dynamically load Supabase client
+  const script = document.createElement("script");
+  script.src = `https://cdn.jsdelivr.net/npm/@supabase/supabase-js@${SUPABASE_VERSION}/dist/umd/supabase.js`;
+  script.onload = async () => {
+    try {
+      state.supabase = window.supabase.createClient(config.url, config.key);
+      
+      // Handle auth state changes
+      state.supabase.auth.onAuthStateChange(async (event, session) => {
+        state.user = session?.user || null;
+        if (state.user) {
+          await loadUserRole(state.user.id);
+        } else {
+          state.userRole = null;
+        }
+        window.dispatchEvent(new CustomEvent("messcloud-user", { detail: safeUser(state.user) }));
       });
+
       state.ready = true;
       window.dispatchEvent(new CustomEvent("messcloud-ready"));
-    })
-    .catch((error) => {
-      state.error = error.message || "Cloud sync failed to load";
+    } catch (error) {
+      state.error = error.message || "Supabase failed to load";
       window.dispatchEvent(new CustomEvent("messcloud-error", { detail: state.error }));
       window.dispatchEvent(new CustomEvent("messcloud-ready"));
-    });
+    }
+  };
+  document.head.appendChild(script);
 } else {
   window.dispatchEvent(new CustomEvent("messcloud-ready"));
 }
 
 async function signUp(email, password) {
   requireReady();
-  return firebase.createUserWithEmailAndPassword(state.auth, email, password);
+  const { data, error } = await state.supabase.auth.signUp({ email, password });
+  if (error) throw error;
+  return data;
 }
 
 async function signIn(email, password) {
   requireReady();
-  return firebase.signInWithEmailAndPassword(state.auth, email, password);
+  const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
 }
 
 async function signOutUser() {
   requireReady();
   closeMess();
-  return firebase.signOut(state.auth);
+  state.userRole = null;
+  const { error } = await state.supabase.auth.signOut();
+  if (error) throw error;
+}
+
+async function loadUserRole(uid) {
+  try {
+    const { data, error } = await state.supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', uid)
+      .single();
+    
+    if (data) {
+      state.userRole = data.role || "student";
+    } else {
+      state.userRole = "student";
+    }
+  } catch (error) {
+    console.error("Error loading user role:", error);
+    state.userRole = "student";
+  }
+}
+
+async function setUserRole(userId, role) {
+  requireReady();
+  if (state.userRole !== "admin") {
+    throw new Error("Only admins can set user roles");
+  }
+
+  const { error } = await state.supabase
+    .from('profiles')
+    .update({ role: role })
+    .eq('id', userId);
+  
+  if (error) throw error;
+}
+
+async function grantManagerAccess(managerId, messId, months) {
+  requireReady();
+  if (state.userRole !== "admin") {
+    throw new Error("Only admins can grant manager access");
+  }
+
+  const { error } = await state.supabase
+    .from('manager_access')
+    .upsert({
+      manager_id: managerId,
+      mess_id: messId,
+      months: months,
+      granted_by: state.user.id
+    }, { onConflict: 'manager_id,mess_id' });
+
+  if (error) throw error;
+}
+
+async function revokeManagerAccess(managerId, messId) {
+  requireReady();
+  if (state.userRole !== "admin") {
+    throw new Error("Only admins can revoke manager access");
+  }
+
+  const { error } = await state.supabase
+    .from('manager_access')
+    .delete()
+    .match({ manager_id: managerId, mess_id: messId });
+
+  if (error) throw error;
+}
+
+async function getManagerAccessList(messId) {
+  requireReady();
+  if (state.userRole !== "admin") {
+    throw new Error("Only admins can view manager access list");
+  }
+
+  const { data, error } = await state.supabase
+    .from('manager_access')
+    .select('*')
+    .eq('mess_id', messId);
+
+  if (error) throw error;
+  return data;
 }
 
 async function openMess(messId, localState, onRemoteState) {
@@ -80,43 +178,81 @@ async function openMess(messId, localState, onRemoteState) {
 
   const safeMessId = normalizeMessId(messId);
   state.messId = safeMessId;
-  state.docRef = firebase.doc(state.db, "messes", safeMessId);
 
-  const snapshot = await firebase.getDoc(state.docRef);
-  if (!snapshot.exists()) {
-    await firebase.setDoc(state.docRef, {
-      ...cleanAppState(localState),
-      ownerUid: state.user.uid,
-      ownerEmail: state.user.email || "",
-      members: { [state.user.uid]: true },
-      createdAt: firebase.serverTimestamp(),
-      updatedAt: firebase.serverTimestamp(),
-      updatedBy: state.user.uid,
-    });
+  // Check access and load data
+  const { data, error } = await state.supabase
+    .from('messes')
+    .select('*')
+    .eq('id', safeMessId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows found"
+    throw new Error("Access denied or mess not found");
   }
 
-  state.unsubscribe = firebase.onSnapshot(state.docRef, (remoteSnapshot) => {
-    if (!remoteSnapshot.exists()) return;
-    const data = remoteSnapshot.data();
-    onRemoteState(cleanAppState(data));
-  });
+  if (!data) {
+    // Create new mess if it doesn't exist (Admin/Manager only)
+    if (state.userRole !== "admin" && state.userRole !== "manager") {
+      throw new Error("Only admins and managers can create new messes");
+    }
+
+    const { error: insertError } = await state.supabase
+      .from('messes')
+      .insert({
+        id: safeMessId,
+        owner_id: state.user.id,
+        data: cleanAppState(localState),
+        updated_by: state.user.id
+      });
+    
+    if (insertError) throw insertError;
+
+    // Add creator as member
+    await state.supabase
+      .from('mess_members')
+      .insert({ mess_id: safeMessId, user_id: state.user.id });
+  }
+
+  // Subscribe to real-time changes
+  state.unsubscribe = state.supabase
+    .channel(`mess_${safeMessId}`)
+    .on('postgres_changes', { 
+      event: 'UPDATE', 
+      schema: 'public', 
+      table: 'messes', 
+      filter: `id=eq.${safeMessId}` 
+    }, payload => {
+      onRemoteState(cleanAppState(payload.new.data));
+    })
+    .subscribe();
+
+  // Initial data push
+  if (data) {
+    onRemoteState(cleanAppState(data.data));
+  }
 
   return safeMessId;
 }
 
 async function saveState(appState, options = {}) {
-  if (!state.ready || !state.user || !state.docRef) return;
-  const write = () =>
-    firebase.setDoc(
-      state.docRef,
-      {
-        ...cleanAppState(appState),
-        members: { [state.user.uid]: true },
-        updatedAt: firebase.serverTimestamp(),
-        updatedBy: state.user.uid,
-      },
-      { merge: true },
-    );
+  if (!state.ready || !state.user || !state.messId) return;
+
+  if (state.userRole === "student") {
+    throw new Error("Students cannot modify mess data");
+  }
+
+  const write = async () => {
+    const { error } = await state.supabase
+      .from('messes')
+      .update({
+        data: cleanAppState(appState),
+        updated_at: new Date().toISOString(),
+        updated_by: state.user.id
+      })
+      .eq('id', state.messId);
+    
+    if (error) throw error;
+  };
 
   if (options.now) {
     clearTimeout(state.saveTimer);
@@ -133,14 +269,15 @@ async function saveState(appState, options = {}) {
 }
 
 function closeMess() {
-  if (state.unsubscribe) state.unsubscribe();
+  if (state.unsubscribe) {
+    state.supabase.removeChannel(state.unsubscribe);
+  }
   state.unsubscribe = null;
-  state.docRef = null;
   state.messId = "";
 }
 
 function requireReady() {
-  if (!configured) throw new Error("Firebase is not configured yet.");
+  if (!configured) throw new Error("Supabase is not configured yet.");
   if (!state.ready) throw new Error(state.error || "Cloud sync is still loading.");
 }
 
@@ -172,5 +309,5 @@ function normalizeMessId(value) {
 
 function safeUser(user) {
   if (!user) return null;
-  return { uid: user.uid, email: user.email || "" };
+  return { id: user.id, email: user.email || "" };
 }

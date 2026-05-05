@@ -10,6 +10,7 @@
     <link rel="icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="role-based-styles.css">
   </head>
   <body>
     <div class="app-shell">
@@ -33,6 +34,7 @@
           <button class="nav-link" data-view="payments">Fund Contributions</button>
           <button class="nav-link" data-view="settlement">Monthly Settlement</button>
           <button class="nav-link" data-view="account">Account & Sync</button>
+          <button class="nav-link" data-view="admin" style="display: none;">Admin Panel</button>
         </nav>
 
         <div class="sidebar-note">
@@ -448,18 +450,70 @@
 
                 <article class="account-card setup-card">
                   <div class="account-card-heading">
-                    <strong>Firebase setup needed</strong>
+                    <strong>Supabase setup needed</strong>
                     <span class="badge">One time</span>
                   </div>
-                  <p>To make login and cloud sync live for everyone, add your Firebase web config in <code>firebase-config.js</code>, enable Email/Password Auth, and enable Firestore.</p>
+                  <p>To make login and cloud sync live for everyone, add your Supabase config in <code>supabase-config.js</code> and run the schema in SQL Editor.</p>
                   <div class="setup-list">
-                    <span>1. Create a Firebase project.</span>
-                    <span>2. Enable Authentication: Email/Password.</span>
-                    <span>3. Enable Firestore Database.</span>
-                    <span>4. Paste your web app config into <code>firebase-config.js</code>.</span>
-                    <span>5. Add <code>firestore.rules</code>, then push/deploy again.</span>
+                    <span>1. Create a Supabase project.</span>
+                    <span>2. Run <code>supabase_schema.sql</code> in SQL Editor.</span>
+                    <span>3. Enable Real-time for <code>messes</code> table.</span>
+                    <span>4. Paste your URL and Anon Key into <code>supabase-config.js</code>.</span>
+                    <span>5. Deploy and start syncing!</span>
                   </div>
                 </article>
+              </div>
+            </section>
+          </section>
+
+          <section id="admin" class="view" aria-labelledby="adminTitle">
+            <section class="section-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">System Administration</p>
+                  <h3 id="adminTitle">Admin Panel</h3>
+                </div>
+              </div>
+              
+              <div class="admin-section">
+                <h4>User Role Management</h4>
+                <form id="userRoleForm" class="data-form">
+                  <label>
+                    <span>User ID (UUID)</span>
+                    <input name="userId" required placeholder="Enter user UUID">
+                  </label>
+                  <label>
+                    <span>Role</span>
+                    <select name="role" required>
+                      <option value="student">Student</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </label>
+                  <button class="button primary" type="submit">Update User Role</button>
+                </form>
+                <div id="userListTable" class="table-wrap"></div>
+              </div>
+
+              <div class="admin-section">
+                <h4>Grant Manager Access</h4>
+                <p class="info-text">Assign managers to messes for specific months</p>
+                <form id="managerAccessForm" class="data-form">
+                  <label>
+                    <span>Manager UUID</span>
+                    <input name="managerId" required placeholder="Enter manager UUID">
+                  </label>
+                  <label>
+                    <span>Mess ID</span>
+                    <input name="messId" required placeholder="Enter mess code">
+                  </label>
+                  <label>
+                    <span>Months (comma separated)</span>
+                    <input name="months" required placeholder="2024-01, 2024-02">
+                  </label>
+                  <button class="button primary" type="submit">Grant Access</button>
+                </form>
+                <div id="managerAccessTable" class="table-wrap"></div>
               </div>
             </section>
           </section>
@@ -468,8 +522,10 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="firebase-config.js"></script>
-    <script type="module" src="cloud.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="cloud.js"></script>
+    <script src="role-based-ui.js"></script>
+    <script src="admin-panel.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

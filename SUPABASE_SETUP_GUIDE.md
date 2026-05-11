@@ -24,6 +24,7 @@ This will create:
 - `manager_access` for month-wise manager control
 - Row Level Security (RLS) policies
 - Trigger to auto-create profiles on sign-up
+- Real-time publication for live updates
 
 ---
 
@@ -58,7 +59,18 @@ window.MESSMATE_SUPABASE_CONFIG = {
 
 ---
 
-## Step 6: Create Admin User
+## Step 6: Deploy Edge Functions (Optional but Recommended)
+
+1. Install [Supabase CLI](https://supabase.com/docs/guides/cli)
+2. Login: `supabase login`
+3. Link project: `supabase link --project-ref your-project-id`
+4. Deploy functions: `supabase functions deploy manage-roles`
+
+This enables secure role management that can't be bypassed from the frontend.
+
+---
+
+## Step 7: Create Admin User
 
 1. Open your app and **Sign Up** with your email
 2. Go back to Supabase **Table Editor** → **profiles** table

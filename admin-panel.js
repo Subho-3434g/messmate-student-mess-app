@@ -35,7 +35,7 @@ const adminPanel = {
     try {
       const cloud = window.MessCloud;
       if (!cloud?.isConfigured()) {
-        showToast("Firebase not configured");
+        showToast("Supabase not configured");
         return;
       }
 
@@ -67,7 +67,7 @@ const adminPanel = {
     try {
       const cloud = window.MessCloud;
       if (!cloud?.isConfigured()) {
-        showToast("Firebase not configured");
+        showToast("Supabase not configured");
         return;
       }
 
@@ -87,7 +87,7 @@ const adminPanel = {
     try {
       const cloud = window.MessCloud;
       if (!cloud?.isConfigured()) {
-        showToast("Firebase not configured");
+        showToast("Supabase not configured");
         return;
       }
 
@@ -111,13 +111,49 @@ const adminPanel = {
         return;
       }
 
-      // This would typically fetch from Firestore
-      // For now, showing placeholder
+      const { data: users, error } = await window.MessCloud.supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!users || !users.length) {
+        userListTable.innerHTML = `<div class="empty-state">No users found</div>`;
+        return;
+      }
+
+      const rows = users
+        .map(
+          (user) => `
+        <tr>
+          <td>${user.email}</td>
+          <td><span class="badge role-${user.role}">${user.role}</span></td>
+          <td>${new Date(user.created_at).toLocaleDateString()}</td>
+          <td>
+            <button class="button small" onclick="document.querySelector('#userId').value='${user.id}'; document.querySelector('#userRoleForm').scrollIntoView();">
+              Edit
+            </button>
+          </td>
+        </tr>
+      `
+        )
+        .join("");
+
       userListTable.innerHTML = `
-        <div class="info-box">
-          User list will be loaded from Firebase Firestore.
-          Implement Firestore query to fetch all users.
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Joined</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
       `;
     } catch (error) {
       userListTable.innerHTML = `<div class="error-state">${error.message}</div>`;

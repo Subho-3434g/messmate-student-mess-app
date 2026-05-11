@@ -44,6 +44,7 @@ if (configured) {
   script.onload = async () => {
     try {
       state.supabase = window.supabase.createClient(config.url, config.key);
+      api.supabase = state.supabase; // Expose for other modules
       
       // Handle auth state changes
       state.supabase.auth.onAuthStateChange(async (event, session) => {
@@ -116,12 +117,13 @@ async function setUserRole(userId, role) {
     throw new Error("Only admins can set user roles");
   }
 
-  const { error } = await state.supabase
-    .from('profiles')
-    .update({ role: role })
-    .eq('id', userId);
+  // Using Edge Function for secure role management
+  const { data, error } = await state.supabase.functions.invoke('manage-roles', {
+    body: { userId, role, action: 'updateRole' },
+  });
   
   if (error) throw error;
+  return data;
 }
 
 async function grantManagerAccess(managerId, messId, months) {

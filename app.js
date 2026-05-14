@@ -391,7 +391,7 @@ function renderAccount() {
 async function openCloudMess(messId) {
   const cloud = getCloud();
   if (!cloud?.isConfigured()) {
-    showToast("Add Firebase config first");
+    showToast("Add Supabase config first");
     return;
   }
 

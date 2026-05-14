@@ -5,5 +5,5 @@
 
 window.MESSMATE_SUPABASE_CONFIG = {
   url: "https://duprrhzdqhlmwkdqygux.supabase.co",
-  key: "" // User should add their anon/public key here
+  key: "sb_publishable_wyXbiPBz0zdtUuYaRyAeIw_Xe1SRVVd"
 };

@@ -802,6 +802,15 @@ tr:last-child td {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+
+  .sidebar.is-open::after {
+    z-index: 99;
+    pointer-events: auto;
+    opacity: 1;
   }
 
   .topbar {

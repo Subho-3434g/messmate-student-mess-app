@@ -1,10 +1,14 @@
-const CACHE_NAME = "messmate-pwa-v1";
+const CACHE_NAME = "messmate-pwa-v2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
+  "./role-based-styles.css",
   "./app.js",
   "./cloud.js",
+  "./role-based-ui.js",
+  "./admin-panel.js",
+  "./supabase-config.js",
   "./manifest.webmanifest",
   "./assets/logo.png",
   "./assets/mess-board.svg"
